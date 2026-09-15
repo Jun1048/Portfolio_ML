@@ -80,23 +80,42 @@ desc_df['rel_diff'] = abs(desc_df['mean'] - desc_df['50%']) / desc_df['50%']
 conditions = [desc_df['rel_diff'] < 0.1, desc_df['rel_diff'] < 0.5]
 choices = ['similar', 'diff']
 desc_df['rdiff_flag'] = np.select(conditions, choices, default='large_diff')
+desc_df[['mean', '50%', 'rel_diff', 'rdiff_flag']]
 
 desc_df['iqr'] = desc_df['75%'] - desc_df['25%']
 desc_df['upper_bound'] = desc_df['75%'] + 1.5 * desc_df['iqr']
 desc_df['lower_bound'] = desc_df['25%'] - 1.5 * desc_df['iqr']
+desc_df[['iqr', 'upper_bound', 'lower_bound']]
 
 cate_fields = df3.select_dtypes(include='category').columns
 df4 = df3.drop(columns=cate_fields)
+df4.head
 
 desc_df['upper_outliers'] = (df4 > desc_df['upper_bound']).sum()
 desc_df['upper_outliers_ratio'] = desc_df['upper_outliers'] / df4.shape[0]
+desc_df[['upper_outliers', 'upper_outliers_ratio']]
+
 desc_df['lower_outliers'] = (df4 < desc_df['lower_bound']).sum()
 desc_df['lower_outliers_ratio'] = desc_df['lower_outliers'] / df4.shape[0]
+desc_df[['lower_outliers', 'lower_outliers_ratio']]
+
 desc_df['outliers'] = desc_df['upper_outliers'] + desc_df['lower_outliers']
 desc_df['outliers_ratio'] = desc_df['outliers'] / df3.shape[0]
+desc_df[['upper_outliers', 'upper_outliers_ratio',
+         'lower_outliers', 'lower_outliers_ratio',
+         'outliers', 'outliers_ratio']]
 
 desc_df['skew'] = df4.skew()
+conditions_skew = [(desc_df['skew'] < -0.5), (desc_df['skew'] > 0.5)]
+choices_skew = ['left tail', 'right tail']
+desc_df['skew_interpret'] = np.select(conditions_skew, choices_skew, default='symmetric')
+desc_df[['skew', 'skew_interpret']]
+
 desc_df['kurt'] = df4.kurt()
+conditions_kurt = [(desc_df['kurt'] < 0), (desc_df['kurt'] > 0)]
+choices_kurt = ['platykurtic', 'leptokurtic']
+desc_df['kurt_interpret'] = np.select(conditions_kurt, choices_kurt, default='mesokurtic')
+desc_df[['kurt', 'kurt_interpret']]
 
 
 def judge_log_transform(skew, kurt):
@@ -114,6 +133,10 @@ def judge_log_transform(skew, kurt):
 
 desc_df['log_need'] = desc_df.apply(lambda row: judge_log_transform(row['skew'], row['kurt']), axis=1)
 desc_df[['skew', 'kurt', 'log_need']]
+
+desc_df.T
+
+desc_df.to_excel("boston_qtcheck_desc.xlsx")
 
 
 # ==============================================================

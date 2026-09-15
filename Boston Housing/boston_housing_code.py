@@ -13,6 +13,7 @@ from scipy import stats
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
+
 # ==============================================================
 # 1. 데이터 로딩 및 품질 점검
 # ==============================================================
@@ -165,6 +166,7 @@ desc_df.T
 desc_df.to_excel("boston_qtcheck_desc.xlsx")
 
 
+
 # ==============================================================
 # 2. 탐색적 데이터 분석 (EDA)
 # ==============================================================
@@ -205,6 +207,7 @@ print("연속형 독립변수:", continuous_cols)
 # 연속형(종속) x 명목형 3집단 이상 -> 해당 변수 없어 미적용
 print("분석범위: 상관분석(연속형 12종), 2집단 비교검정(CHAS) 적용 / ANOVA·교차분석은 해당 변수 없어 미적용")
 
+
 # --------------------------------------------------------------
 # 2-1. 단변량 분석
 # --------------------------------------------------------------
@@ -229,11 +232,14 @@ print(df3['CHAS'].value_counts())
 # CHAS는 유일한 명목형 변수이며 심한 불균형(93.1%/6.9%) -> 검정력 저하 가능성 있으나
 # 버리지 않고 2-2에서 직접 검정으로 확인함
 
+
 # --------------------------------------------------------------
 # 2-2. 이변량 분석
 # --------------------------------------------------------------
 
 # 1. 상관분석 (연속형 독립변수 -> 종속변수, Spearman)
+# MEDV 자체가 비정규(왜도 +1.108)라서 12개 변수 전체에 Spearman을 일괄 적용함
+# (변수마다 따로 정규성을 판단해서 고른 것이 아님)
 num_fields = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
 corr_result = []
 for field in num_fields:
@@ -241,6 +247,9 @@ for field in num_fields:
     corr_result.append({'field': field, 'rho': rho, 'p': pvalue})
 corr_df = DataFrame(corr_result).sort_values('rho', key=abs, ascending=False)
 corr_df
+# 채택 판단: LSTAT(최우선)·RM·INDUS·NOX·TAX·CRIM·PTRATIO·AGE·DIS·ZN·RAD(경계)는
+# 유의하고 rho가 Moderate 이상이라 채택. B만 유의하나 rho=0.186(Weak)로
+# 단독 설명력이 미미해 별도로 "보류"로 분류함(이유가 NOX 등의 후보 사유와 다름)
 
 # 2. 2집단 비교 검정 (CHAS -> 종속변수)
 group0 = df3[df3['CHAS'] == 0]['MEDV']
@@ -256,11 +265,14 @@ print(f"CHAS=1 정규성: stat={stat1:.4f}, p={pvalue1:.6f}")
 levene_stat, levene_p = stats.levene(group0, group1)
 print(f"Levene 등분산: stat={levene_stat:.4f}, p={levene_p:.6f}")
 
-# 정규성 위배 -> Mann-Whitney U 검정(비모수)
+# 정규성 위배 -> Mann-Whitney U 검정(비모수), 양측+단측 모두 확인
 u_stat, u_pvalue = stats.mannwhitneyu(group0, group1, alternative='two-sided')
+u_less, p_less = stats.mannwhitneyu(group0, group1, alternative='less')
+u_greater, p_greater = stats.mannwhitneyu(group0, group1, alternative='greater')
 n0, n1 = len(group0), len(group1)
 effect_r = 1 - (2 * u_stat) / (n0 * n1)
-print(f"Mann-Whitney U: stat={u_stat}, p={u_pvalue:.6f}, effect_r={effect_r:.3f}")
+print(f"Mann-Whitney U(양측): stat={u_stat}, p={u_pvalue:.6f}, effect_r={effect_r:.3f}")
+print(f"단측(0<1): p={p_less:.6f} / 단측(0>1): p={p_greater:.6f}")
 
 # --------------------------------------------------------------
 # 2-3. 다변량 분석
@@ -276,6 +288,7 @@ for i, field in enumerate(vif_fields):
 vif_df = DataFrame(vif_result).sort_values('vif', ascending=False)
 vif_df
 
+
 # --------------------------------------------------------------
 # 2-4. 최종 변수 선택
 # --------------------------------------------------------------
@@ -283,12 +296,15 @@ vif_df
 # 강한 쌍(|rho|>=0.7)으로 묶인 변수 중 종속변수와의 효과크기가 가장 큰 1개만 대표로 남김
 # -> 세율축(TAX, RAD): TAX(rho=-0.562)가 RAD(rho=-0.347)보다 강하므로 RAD 제외
 # -> 도심축(CRIM,DIS,NOX,AGE,INDUS): INDUS(rho=-0.578)가 최대이므로 대표 채택,
-#    나머지는 모델링 이후 계수/중요도로 재검증할 "후보"로 남김
+#    나머지(NOX,CRIM,AGE,DIS)는 다중공선성 때문에 "후보"로 보류하고
+#    모델링 이후 계수/중요도로 재검증함
+# -> B는 다중공선성과 무관하게 애초에 단독 설명력(rho=0.186, Weak)이 약해서
+#    별도로 "보류"로 분류함 (위 도심축 변수들과는 보류 사유가 다름)
 print("RAD는 세율축에서 TAX와 중복되고 효과크기가 더 약해 최종 변수에서 제외함")
 
 
-# ==============================================================
 
+# ==============================================================
 # 3. 모델링용 데이터 전처리
 # ==============================================================
 
@@ -480,6 +496,7 @@ cv_rmse = -cross_val_score(CatBoostRegressor(random_state=42, verbose=0),
 gap_pct = (cv_rmse.mean() - train_rmse) / max(abs(train_rmse), abs(cv_rmse.mean())) * 100
 print(f"Train RMSE={train_rmse:.4f}, CV RMSE={cv_rmse.mean():.4f}, Test RMSE={rmse_cat:.4f}")
 print(f"Gap%={gap_pct:.1f}%, CV-Test 차이={abs(cv_rmse.mean()-rmse_cat):.4f}")
+
 
 
 # ==============================================================

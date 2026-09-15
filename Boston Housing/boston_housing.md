@@ -165,7 +165,7 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 | 〃 | RAD | 고속도로 접근성 지수 | 지수 | tract | 연속형(이산) | 1 ~ 24 (2단계에서 최종 변수 선택 시 제외됨) |
 | 〃 | TAX | 재산세율 | $/$10,000 | town | 연속형 | 187 ~ 711 |
 | 〃 | PTRATIO | 학생-교사 비율 | 명/명 | town | 연속형 | 12.6 ~ 22 |
-| 〃 | B | 1000(Bk-0.63)² | 변환값 | town | 연속형 | 0.32 ~ 396.9 |
+| 〃 | B | 흑인비율지수(1000(Bk-0.63)²) | 변환값 | town | 연속형 | 0.32 ~ 396.9 |
 | 〃 | LSTAT | 저소득층 비율 | % | tract | 연속형 | 1.73 ~ 37.97 |
 
 - 5개 변수(CRIM·INDUS·TAX·PTRATIO·B)는 tract보다 넓은 town 단위로 수집되어 "집계단위" 컬럼을 별도로 명시함

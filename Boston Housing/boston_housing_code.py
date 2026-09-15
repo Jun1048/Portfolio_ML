@@ -4,7 +4,6 @@
 #
 # 원본 데이터: Boston Housing Dataset (Harrison & Rubinfeld, 1978 논문 기반,
 # UCI Machine Learning Repository 및 Kaggle에 공개된 506행 x 14열 데이터)
-#
 # 아래 코드는 원본 CSV(boston_housing_raw.csv)를 입력으로 사용함
 
 import numpy as np
@@ -18,26 +17,34 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 # 1. 데이터 로딩 및 품질 점검
 # ==============================================================
 
+# 데이터 불러오기
 origin = pd.read_csv("boston_housing_raw.csv")
 origin.head()
 
+# 자료형 확인
 origin.info()
 
+# 자료형 변환
 df1 = origin.copy()
 df1["CHAS"] = df1["CHAS"].astype("category")
 df1.info()
 
+# 중복 데이터 확인
 dup = df1.duplicated()
 dup.sum()
 
+# 중복 데이터 제거
 df2 = df1.drop_duplicates()
 df2.duplicated().sum()
 
+#명목형 변수 단위 확인
 df2['CHAS'].value_counts()
 
+# 연속형 변수 단위 확인을 위한 변수명 추출
 fields = df2.select_dtypes(include="number").columns.to_list()
 print(fields)
 
+# 연속형 변수 단위 확인
 minmax = []
 for field in fields:
     min_value = df2[field].min()
@@ -46,29 +53,38 @@ for field in fields:
 minmax_df = DataFrame(minmax, index=fields)
 minmax_df
 
+# 결측치 확인
 na_count = df2.isna().sum()
 na_count
 
+# 결측치 비율 계산을 위한 데이터 크기 확인
 rows, cols = df2.shape
 print(f"rows: {rows}, cols: {cols}")
 
+# 결측치 비율 확인
 na_ratio = na_count / rows
 na_ratio
 
+# 엑셀 파일 저장
 df2.to_excel("boston_qtcheck.xlsx", index=False)
 
+# 저장 데이터 불러오기(새로운 jupyter 파일 생성 후 앞 단계에서 저장한 데이터 불러와 새로 진행)
 origin_qt = read_excel("boston_qtcheck.xlsx")
 
+# 타입 변환
 df3 = origin_qt.copy()
 df3['CHAS'] = df3['CHAS'].astype('category')
 df3.info()
 
+# 연속형 변수의 기술 통계량 표
 desc_df = df3.describe().T
 desc_df
 
+# 명목형 변수의 기술 통계량 표
 cate_desc_df = df3.describe(include='category').T
 cate_desc_df
 
+# 명목형 변수의 기술 통계량
 cate_fields = df3.select_dtypes(include='category').columns
 for field in cate_fields:
     vcount = df3[field].value_counts()
@@ -76,48 +92,56 @@ for field in cate_fields:
     cate_result = DataFrame({'count': vcount, 'percent': percent})
     print(cate_result)
 
+# 평균-중앙값의 상대 차이율 계산
 desc_df['rel_diff'] = abs(desc_df['mean'] - desc_df['50%']) / desc_df['50%']
 conditions = [desc_df['rel_diff'] < 0.1, desc_df['rel_diff'] < 0.5]
 choices = ['similar', 'diff']
 desc_df['rdiff_flag'] = np.select(conditions, choices, default='large_diff')
 desc_df[['mean', '50%', 'rel_diff', 'rdiff_flag']]
 
+# IQR, 이상치 경계값 계산
 desc_df['iqr'] = desc_df['75%'] - desc_df['25%']
 desc_df['upper_bound'] = desc_df['75%'] + 1.5 * desc_df['iqr']
 desc_df['lower_bound'] = desc_df['25%'] - 1.5 * desc_df['iqr']
 desc_df[['iqr', 'upper_bound', 'lower_bound']]
 
+# 명목형 변수를 제외한 데이터 프레임
 cate_fields = df3.select_dtypes(include='category').columns
 df4 = df3.drop(columns=cate_fields)
 df4.head
 
+# 상한 이상치 탐지
 desc_df['upper_outliers'] = (df4 > desc_df['upper_bound']).sum()
 desc_df['upper_outliers_ratio'] = desc_df['upper_outliers'] / df4.shape[0]
 desc_df[['upper_outliers', 'upper_outliers_ratio']]
 
+# 하한 이상치 탐지
 desc_df['lower_outliers'] = (df4 < desc_df['lower_bound']).sum()
 desc_df['lower_outliers_ratio'] = desc_df['lower_outliers'] / df4.shape[0]
 desc_df[['lower_outliers', 'lower_outliers_ratio']]
 
+# 전체 이상치 집계
 desc_df['outliers'] = desc_df['upper_outliers'] + desc_df['lower_outliers']
 desc_df['outliers_ratio'] = desc_df['outliers'] / df3.shape[0]
 desc_df[['upper_outliers', 'upper_outliers_ratio',
          'lower_outliers', 'lower_outliers_ratio',
          'outliers', 'outliers_ratio']]
 
+# 왜도 점검
 desc_df['skew'] = df4.skew()
 conditions_skew = [(desc_df['skew'] < -0.5), (desc_df['skew'] > 0.5)]
 choices_skew = ['left tail', 'right tail']
 desc_df['skew_interpret'] = np.select(conditions_skew, choices_skew, default='symmetric')
 desc_df[['skew', 'skew_interpret']]
 
+# 첨도 점검
 desc_df['kurt'] = df4.kurt()
 conditions_kurt = [(desc_df['kurt'] < 0), (desc_df['kurt'] > 0)]
 choices_kurt = ['platykurtic', 'leptokurtic']
 desc_df['kurt_interpret'] = np.select(conditions_kurt, choices_kurt, default='mesokurtic')
 desc_df[['kurt', 'kurt_interpret']]
 
-
+# 로그 변환 필요성 판단 함수 정의
 def judge_log_transform(skew, kurt):
     if skew >= 1:
         return "log1p"
@@ -130,12 +154,14 @@ def judge_log_transform(skew, kurt):
     else:
         return "none"
 
-
+# 로그 변환 필요성 판정
 desc_df['log_need'] = desc_df.apply(lambda row: judge_log_transform(row['skew'], row['kurt']), axis=1)
 desc_df[['skew', 'kurt', 'log_need']]
 
+# 최종 기술 통계량 확인
 desc_df.T
 
+# 기술 통계량 표 저장
 desc_df.to_excel("boston_qtcheck_desc.xlsx")
 
 

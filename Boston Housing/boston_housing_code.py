@@ -579,7 +579,3 @@ shap_final_df = DataFrame({'field': adopted_fields, 'mean_abs_shap': mean_abs_sh
 shap_final_df = shap_final_df.sort_values('mean_abs_shap', ascending=False)
 shap_final_df
 
-# ==============================================================
-# 상세 해석·의문점 규명 과정(EDA 자료와의 대조, 변수 선택 규칙 적용 근거,
-# 과적합 진단 등)은 통합 리포트(md) 참고
-# ==============================================================

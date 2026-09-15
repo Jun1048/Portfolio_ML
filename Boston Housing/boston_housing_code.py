@@ -69,7 +69,7 @@ na_ratio
 df2.to_excel("boston_qtcheck.xlsx", index=False)
 
 # 저장 데이터 불러오기(새로운 jupyter 파일 생성 후 앞 단계에서 저장한 데이터 불러와 새로 진행)
-origin_qt = read_excel("boston_qtcheck.xlsx")
+origin_qt = pd.read_excel("boston_qtcheck.xlsx")
 
 # 타입 변환
 df3 = origin_qt.copy()
@@ -169,39 +169,33 @@ desc_df.to_excel("boston_qtcheck_desc.xlsx")
 # 2. 탐색적 데이터 분석 (EDA)
 # ==============================================================
 
-# 종속변수(MEDV) 절단 신호 확인
+# --------------------------------------------------------------
+# 2-1. 단변량 분석
+# --------------------------------------------------------------
+
+# 1. 연속형 종속변수(MEDV) 절단 신호 확인
 medv_capped_count = (df3['MEDV'] == 50.0).sum()
 print("MEDV=50 절단 건수:", medv_capped_count)
 
-# AGE 분포 확인 — 100 부근 집중되어 있으나, 별도 절단 처리 없이 그대로 사용함
+# 2. 연속형 독립변수 — AGE 분포 확인(100 부근 집중되어 있으나 그대로 사용)
 age_capped_count = (df3['AGE'] == 100.0).sum()
 print("AGE=100 건수:", age_capped_count, "(별도 플래그 없이 그대로 사용)")
 
-# RAD, TAX 이산 구조 확인
+# 연속형 독립변수 — RAD, TAX 이산 구조 확인
 rad_max_count = (df3['RAD'] == 24).sum()
 tax_666_count = (df3['TAX'] == 666).sum()
 print("RAD=24 건수:", rad_max_count, "/ TAX=666 건수:", tax_666_count)
 print("두 집합이 동일 town 그룹인지 확인:",
       set(df3[df3['RAD'] == 24].index) == set(df3[df3['TAX'] == 666].index))
 
-# CHAS 집단별 MEDV 정규성 검정 (normaltest)
-group0 = df3[df3['CHAS'] == 0]['MEDV']
-group1 = df3[df3['CHAS'] == 1]['MEDV']
-stat0, pvalue0 = stats.normaltest(group0)
-stat1, pvalue1 = stats.normaltest(group1)
-print(f"CHAS=0 정규성: stat={stat0:.4f}, p={pvalue0:.6f}")
-print(f"CHAS=1 정규성: stat={stat1:.4f}, p={pvalue1:.6f}")
+# 3. 범주형 독립변수(CHAS) 분포 확인 — 검정은 이변량 단계에서 수행
+print(df3['CHAS'].value_counts())
 
-levene_stat, levene_p = stats.levene(group0, group1)
-print(f"Levene 등분산: stat={levene_stat:.4f}, p={levene_p:.6f}")
+# --------------------------------------------------------------
+# 2-2. 이변량 분석
+# --------------------------------------------------------------
 
-# 정규성 위배 -> Mann-Whitney U 검정
-u_stat, u_pvalue = stats.mannwhitneyu(group0, group1, alternative='two-sided')
-n0, n1 = len(group0), len(group1)
-effect_r = 1 - (2 * u_stat) / (n0 * n1)
-print(f"Mann-Whitney U: stat={u_stat}, p={u_pvalue:.6f}, effect_r={effect_r:.3f}")
-
-# 연속형 변수와 MEDV의 상관관계 (Spearman)
+# 1. 상관분석 (연속형 독립변수 -> 종속변수, Spearman)
 num_fields = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
 corr_result = []
 for field in num_fields:
@@ -210,7 +204,31 @@ for field in num_fields:
 corr_df = DataFrame(corr_result).sort_values('rho', key=abs, ascending=False)
 corr_df
 
-# 다중공선성 확인 (VIF, 임계값 10.0)
+# 2. 2집단 비교 검정 (CHAS -> 종속변수)
+group0 = df3[df3['CHAS'] == 0]['MEDV']
+group1 = df3[df3['CHAS'] == 1]['MEDV']
+
+# 정규성 검정 (normaltest)
+stat0, pvalue0 = stats.normaltest(group0)
+stat1, pvalue1 = stats.normaltest(group1)
+print(f"CHAS=0 정규성: stat={stat0:.4f}, p={pvalue0:.6f}")
+print(f"CHAS=1 정규성: stat={stat1:.4f}, p={pvalue1:.6f}")
+
+# 등분산 검정 (Levene)
+levene_stat, levene_p = stats.levene(group0, group1)
+print(f"Levene 등분산: stat={levene_stat:.4f}, p={levene_p:.6f}")
+
+# 정규성 위배 -> Mann-Whitney U 검정(비모수)
+u_stat, u_pvalue = stats.mannwhitneyu(group0, group1, alternative='two-sided')
+n0, n1 = len(group0), len(group1)
+effect_r = 1 - (2 * u_stat) / (n0 * n1)
+print(f"Mann-Whitney U: stat={u_stat}, p={u_pvalue:.6f}, effect_r={effect_r:.3f}")
+
+# --------------------------------------------------------------
+# 2-3. 다변량 분석
+# --------------------------------------------------------------
+
+# 1. 독립변수간 상관 분석 + 다중공선성 확인 (VIF, 임계값 10.0)
 vif_fields = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
 X_vif = df3[vif_fields].assign(const=1)
 vif_result = []
@@ -220,8 +238,11 @@ for i, field in enumerate(vif_fields):
 vif_df = DataFrame(vif_result).sort_values('vif', ascending=False)
 vif_df
 
-# 최종 변수 선택 규칙: 강한 쌍(|rho|>=0.7)으로 묶인 변수 중
-# 종속변수와의 효과크기가 가장 큰 1개만 대표로 남김
+# --------------------------------------------------------------
+# 2-4. 최종 변수 선택
+# --------------------------------------------------------------
+
+# 강한 쌍(|rho|>=0.7)으로 묶인 변수 중 종속변수와의 효과크기가 가장 큰 1개만 대표로 남김
 # -> 세율축(TAX, RAD): TAX(rho=-0.562)가 RAD(rho=-0.347)보다 강하므로 RAD 제외
 # -> 도심축(CRIM,DIS,NOX,AGE,INDUS): INDUS(rho=-0.578)가 최대이므로 대표 채택,
 #    나머지는 모델링 이후 계수/중요도로 재검증할 "후보"로 남김
@@ -229,6 +250,7 @@ print("RAD는 세율축에서 TAX와 중복되고 효과크기가 더 약해 최
 
 
 # ==============================================================
+
 # 3. 모델링용 데이터 전처리
 # ==============================================================
 
@@ -247,6 +269,18 @@ df5['MEDV_log'] = np.log(df5['MEDV'])
 # TAX와 중복되어 제외되었으므로 아래 모델링에 투입하지 않음
 
 df5[['CRIM_log', 'ZN_log', 'DIS_log', 'LSTAT_log', 'B_revlog', 'MEDV_log']].head()
+
+# --- 파생변수 검증: 원본 대비 로그변환 후 MEDV와의 Pearson 상관 개선 확인 ---
+# (일관된 비교를 위해 종속변수는 원본 MEDV로 통일해서 비교함)
+orig_vars = ['CRIM', 'ZN', 'DIS', 'LSTAT', 'B']
+log_vars = ['CRIM_log', 'ZN_log', 'DIS_log', 'LSTAT_log', 'B_revlog']
+for o, l in zip(orig_vars, log_vars):
+    pear_o, _ = stats.pearsonr(df5[o], df5['MEDV'])
+    pear_l, _ = stats.pearsonr(df5[l], df5['MEDV'])
+    print(f"{o}: Pearson {pear_o:.3f} -> {l}: {pear_l:.3f}")
+
+# 파생변수 간 상관(다중공선성 재확인)
+df5[log_vars].corr()
 
 
 # ==============================================================
@@ -430,6 +464,82 @@ mean_abs_shap = np.abs(shap_values).mean(axis=0)
 shap_df = DataFrame({'field': fields, 'mean_abs_shap': mean_abs_shap})
 shap_df = shap_df.sort_values('mean_abs_shap', ascending=False)
 shap_df
+
+
+# ==============================================================
+# 5-2. Feature Importance 기반 변수 축소 -> 재학습 -> 재튜닝 -> 재검증
+# ==============================================================
+
+from sklearn.model_selection import GridSearchCV
+
+# 1. Feature Importance 도출 (위 fi_df) + 누적비율 계산
+fi_df['ratio'] = fi_df['importance'] / fi_df['importance'].sum() * 100
+fi_df = fi_df.sort_values('importance', ascending=False)
+fi_df['cum'] = fi_df['ratio'].cumsum()
+fi_df
+
+# 2. 채택된 변수 추출 (채택 기준: 누적 중요도 95%)
+adopted_fields = []
+for i, c in enumerate(fi_df['cum']):
+    adopted_fields.append(fi_df['field'].iloc[i])
+    if c >= 95.0:
+        break
+excluded_fields = [f for f in fields if f not in adopted_fields]
+print("채택된 변수:", adopted_fields)
+print("제외된 변수:", excluded_fields)
+
+# 3. 데이터에서 채택된 변수만 추출
+X_train_reduced = df5.loc[idx_train, adopted_fields]
+X_test_reduced = df5.loc[idx_test, adopted_fields]
+
+# 4. 베이스모델 재학습
+model_cat_reduced = CatBoostRegressor(random_state=42, verbose=0)
+model_cat_reduced.fit(X_train_reduced, y_train)
+pred_reduced = model_cat_reduced.predict(X_test_reduced)
+rmse_reduced = np.sqrt(mean_squared_error(y_test, pred_reduced))
+mae_reduced = mean_absolute_error(y_test, pred_reduced)
+r2_reduced = r2_score(y_test, pred_reduced)
+print("축소모델(9개) - RMSE:", rmse_reduced, "MAE:", mae_reduced, "R2:", r2_reduced)
+
+# 5. 하이퍼파라미터 재튜닝
+param_grid = {'depth': [4, 6, 8], 'iterations': [300, 500], 'learning_rate': [0.03, 0.05, 0.1]}
+grid = GridSearchCV(CatBoostRegressor(random_state=42, verbose=0), param_grid,
+                     cv=5, scoring='neg_root_mean_squared_error')
+grid.fit(X_train_reduced, y_train)
+print("재튜닝 최적 파라미터:", grid.best_params_)
+
+model_cat_tuned = CatBoostRegressor(**grid.best_params_, random_state=42, verbose=0)
+model_cat_tuned.fit(X_train_reduced, y_train)
+pred_tuned = model_cat_tuned.predict(X_test_reduced)
+rmse_tuned = np.sqrt(mean_squared_error(y_test, pred_tuned))
+print("재튜닝 후 RMSE:", rmse_tuned,
+      "(기본 하이퍼파라미터보다 나빠지면 재튜닝 결과 대신 기본값을 채택함)")
+
+# 6. 과적합 재판정 (기본 하이퍼파라미터 축소모델 기준으로 최종 채택)
+pred_train_reduced = model_cat_reduced.predict(X_train_reduced)
+train_rmse_reduced = np.sqrt(mean_squared_error(y_train, pred_train_reduced))
+cv_rmse_reduced = -cross_val_score(CatBoostRegressor(random_state=42, verbose=0),
+                                    X_train_reduced, y_train, cv=kf,
+                                    scoring='neg_root_mean_squared_error')
+gap_pct_reduced = (cv_rmse_reduced.mean() - train_rmse_reduced) / \
+    max(abs(train_rmse_reduced), abs(cv_rmse_reduced.mean())) * 100
+print(f"[축소모델] Train={train_rmse_reduced:.4f}, CV={cv_rmse_reduced.mean():.4f}, "
+      f"Test={rmse_reduced:.4f}, Gap%={gap_pct_reduced:.1f}%")
+
+# 종합 판단: 성능 저하가 1% 미만이고 변수가 2개 줄었으므로, 최종 모형은 9개 변수로 확정함
+
+# --- 최종(9개 변수) 모형의 변수중요도·SHAP 재계산 ---
+fi_final = model_cat_reduced.get_feature_importance()
+fi_final_df = DataFrame({'field': adopted_fields, 'importance': fi_final})
+fi_final_df = fi_final_df.sort_values('importance', ascending=False)
+fi_final_df
+
+explainer_final = shap.TreeExplainer(model_cat_reduced)
+shap_values_final = explainer_final.shap_values(X_test_reduced)
+mean_abs_shap_final = np.abs(shap_values_final).mean(axis=0)
+shap_final_df = DataFrame({'field': adopted_fields, 'mean_abs_shap': mean_abs_shap_final})
+shap_final_df = shap_final_df.sort_values('mean_abs_shap', ascending=False)
+shap_final_df
 
 # ==============================================================
 # 상세 해석·의문점 규명 과정(EDA 자료와의 대조, 변수 선택 규칙 적용 근거,

@@ -21,6 +21,8 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 origin = pd.read_csv("boston_housing_raw.csv")
 origin.head()
 
+origin.info()
+
 df1 = origin.copy()
 df1["CHAS"] = df1["CHAS"].astype("category")
 df1.info()
@@ -53,7 +55,11 @@ print(f"rows: {rows}, cols: {cols}")
 na_ratio = na_count / rows
 na_ratio
 
-df3 = df2.copy()
+df2.to_excel("boston_qtcheck.xlsx", index=False)
+
+origin_qt = read_excel("boston_qtcheck.xlsx")
+
+df3 = origin_qt.copy()
 df3['CHAS'] = df3['CHAS'].astype('category')
 df3.info()
 

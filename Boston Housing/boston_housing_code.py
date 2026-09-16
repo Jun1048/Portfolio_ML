@@ -113,7 +113,7 @@ def judge_log_transform(skew, kurt):
 desc_df['log_need'] = desc_df.apply(lambda row: judge_log_transform(row['skew'], row['kurt']), axis=1)
 # ZN은 최솟값이 0이라 순수 log 대신 log1p를 별도 지정함
 desc_df.loc['ZN', 'log_need'] = 'log1p'
-desc_df[['skew', 'kurt', 'log_need']]
+print(desc_df[['skew', 'kurt', 'log_need']])
 
 desc_df.to_excel("boston_qtcheck_desc.xlsx")
 
@@ -174,7 +174,7 @@ for field in num_fields:
     rho, pvalue = stats.spearmanr(df3[field], df3['MEDV'])
     corr_result.append({'field': field, 'rho': rho, 'p': pvalue})
 corr_df = DataFrame(corr_result).sort_values('rho', key=abs, ascending=False)
-corr_df
+print(corr_df)
 
 # 2. 2집단 비교 검정 (CHAS -> 종속변수)
 group0 = df3[df3['CHAS'] == 0]['MEDV']
@@ -207,7 +207,7 @@ for i, field in enumerate(vif_fields):
     vif_value = variance_inflation_factor(X_vif.values, i)
     vif_result.append({'field': field, 'vif': vif_value})
 vif_df = DataFrame(vif_result).sort_values('vif', ascending=False)
-vif_df
+print(vif_df)
 
 # --------------------------------------------------------------
 # 2-4. 최종 변수 선택 (EDA 단계의 예비 판단 — 3~4단계에서 재검정함)
@@ -267,7 +267,7 @@ for c in continuous_cols:
     outlier_report.append({'field': c, 'lower': lower, 'upper': upper,
                             'n_outliers': n_out, 'ratio': n_out / len(df_ck1)})
 outlier_df = DataFrame(outlier_report)
-outlier_df
+print(outlier_df)
 
 df_ck2.to_excel("boston_checkpoint_2.xlsx", index=False)
 
@@ -369,7 +369,7 @@ for name, data in checkpoints.items():
     })
 
 result_df = DataFrame(result).set_index("모델")
-result_df.round(3)
+print(result_df.round(3))
 
 # 최종 모델 채택: 1순위 원본척도 RMSE, 2순위 간명성 -> "1_로그변환"
 final_fit, final_cols = fits["1_로그변환"]
@@ -394,7 +394,7 @@ print(final_fit.summary())
 
 coef_df = DataFrame({'B': final_fit.params, 't': final_fit.tvalues,
                       'p': final_fit.pvalues}).round(4)
-coef_df
+print(coef_df)
 
 from scipy.stats import zscore
 

@@ -2,8 +2,7 @@
 # Boston Housing 주택가격 예측 — 전체 분석 코드
 # ==============================================================
 #
-# 원본 데이터: Boston Housing Dataset (Harrison & Rubinfeld, 1978 논문 기반,
-# UCI Machine Learning Repository 및 Kaggle에 공개된 506행 x 14열 데이터)
+# 원본 데이터: Boston Housing Dataset (Kaggle에 공개된 데이터)
 # 아래 코드는 원본 CSV(boston_housing_raw.csv)를 입력으로 사용함
 
 import numpy as np
@@ -111,7 +110,7 @@ def judge_log_transform(skew, kurt):
 
 
 desc_df['log_need'] = desc_df.apply(lambda row: judge_log_transform(row['skew'], row['kurt']), axis=1)
-# ZN은 최솟값이 0이라 순수 log 대신 log1p를 별도 지정함
+
 desc_df.loc['ZN', 'log_need'] = 'log1p'
 print(desc_df[['skew', 'kurt', 'log_need']])
 
@@ -160,14 +159,14 @@ print("두 집합이 동일 town 그룹인지 확인:",
 
 print(df3['CHAS'].value_counts())
 # CHAS는 유일한 명목형 변수이며 심한 불균형(93.1%/6.9%) -> 검정력 저하 가능성 있으나
-# 버리지 않고 2-2에서 직접 검정으로 확인함
+# 버리지 않고 2-2에서 직접 검정으로 확인
 
 # --------------------------------------------------------------
 # 2-2. 이변량 분석
 # --------------------------------------------------------------
 
 # 1. 상관분석 (연속형 독립변수 -> 종속변수, Spearman)
-# MEDV 자체가 비정규(왜도 +1.108)라서 12개 변수 전체에 Spearman을 일괄 적용함
+# MEDV 자체가 비정규(왜도 +1.108)라서 12개 변수 전체에 Spearman을 일괄 적용
 num_fields = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
 corr_result = []
 for field in num_fields:
@@ -294,7 +293,7 @@ remain_cols, max_vif = reduce_vif(df_ck2, continuous_cols, threshold=10.0)
 print("남은 변수:", remain_cols)
 print("최대 VIF:", round(max_vif, 2))
 
-df_ck3 = df_ck2.copy()  # 제거된 변수가 없어 체크포인트2와 동일
+df_ck3 = df_ck2.copy()  
 df_ck3.to_excel("boston_checkpoint_3.xlsx", index=False)
 
 # --------------------------------------------------------------
@@ -353,8 +352,7 @@ result = []
 for name, data in checkpoints.items():
     log = log1p_y[name]
     print(f"=== {name} ===")
-    # 체크포인트0은 등분산성이 아직 확인되지 않았으므로 일반 표준오차,
-    # 로그변환 이후 체크포인트는 HC3(강건표준오차)를 사용함
+
     fit, cols = backward_ols(data, "MEDV", all_x, use_hc3=log)
     fits[name] = (fit, cols)
 

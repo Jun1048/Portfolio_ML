@@ -864,7 +864,6 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 - Gilley, O. W., & Pace, R. K. (1996). On the Harrison and Rubinfeld data. *Journal of Environmental Economics and Management*, 31(3), 403–405. [https://doi.org/10.1006/jeem.1996.0052](https://doi.org/10.1006/jeem.1996.0052)
 - Pace, R. K., & Gilley, O. W. (1997). Using the spatial configuration of the data to improve estimation. *Journal of Real Estate Finance and Economics*, 14(3), 333–340. [https://doi.org/10.1023/A:1007762613901](https://doi.org/10.1023/A:1007762613901)
 
-※ 위 6건 중 Gilley & Pace(1996)·Pace & Gilley(1997) 두 건은 본 검증 과정에서 웹 검색으로 실재 여부·서지사항(권·호·페이지·DOI)을 재확인함. 나머지 4건은 이번 검증 범위에서 별도로 재조회하지 않았음
 
 ---
 

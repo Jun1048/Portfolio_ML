@@ -323,7 +323,15 @@ all_x = continuous_cols + ["CHAS"]
 
 
 def backward_ols(data, target_col, xcols, use_hc3=False):
-    """유의하지 않은 변수(p>0.05)를 하나씩 제거하는 후진소거 OLS"""
+    """유의하지 않은 변수(p>0.05)를 하나씩 제거하는 후진소거 OLS
+
+    참고: use_hc3=True일 때 F-statistic도 HC3(이분산 강건) 기준으로 계산됨.
+    강의자료(LAB09-06) 예시 슬라이드의 F=158.21은 동일 모델을 classical
+    (cov_type='nonrobust') 기준으로 계산한 값이라 여기서 나오는 F=144.5와
+    다름 — 계산 오류가 아니라 표준오차 산정방식 차이임(등분산성 위배가
+    확인되어 본 코드는 의도적으로 HC3를 사용함). R²·Adj.R²·Durbin-Watson은
+    cov_type에 영향받지 않아 두 방식 모두 동일하게 나옴.
+    """
     y = data[target_col]
     cols = list(xcols)
     while True:

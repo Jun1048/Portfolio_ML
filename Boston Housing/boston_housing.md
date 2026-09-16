@@ -705,12 +705,14 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 | 지표 | 값 |
 |---|---|
 | R²(모델 척도, 로그 MEDV 기준) | 0.762 |
-| Adj. R² | 0.756 |
-| F-통계량 | 144.5 (p<0.001) |
+| Adj. R² | 0.757 |
+| F-통계량 | 144.5 (HC3, p<0.001) |
 | R²(원본 척도) | 0.777 |
 | RMSE / MAE(원본 척도) | 4.336 / 3.075(천달러) |
 
 - 모형은 통계적으로 유의하며, 10개 독립변수가 MEDV 변동의 약 77.7%(원본 척도 기준)를 설명함
+- **강의자료 예시 슬라이드(LAB09-06, p.21~22)와의 차이**: 슬라이드는 동일한 최종 변수 구성으로 F(10,495)=158.21을 보고하나, 이는 **classical(비강건, `cov_type='nonrobust'`) 표준오차 기준** F통계량임. 본 리포트는 5-4에서 확인한 등분산성 위배(Breusch-Pagan, p<0.001)에 대응해 **F검정도 계수검정과 동일하게 HC3(이분산 강건)로 일관되게 산출**했으며, 그 결과 F=144.5가 나옴. 실제로 `cov_type='nonrobust'`로 동일 모델을 재계산하면 F=158.209(≈158.21)로 슬라이드 값이 정확히 재현되어, 두 수치가 계산방식 차이에서 비롯됨을 확인함. R²(0.762)·Adj.R²(0.757)·Durbin-Watson(0.945)은 표준오차 산정방식에 영향받지 않는 통계량이라 슬라이드와 본 리포트가 동일함
+- 슬라이드 원문은 종속변수를 "log1p(MEDV)"로 표기하나, 위 수치(158.21 / 0.762 / 0.945)를 역산해 보면 실제로는 log(MEDV)를 사용한 경우와 일치함(log1p(MEDV) 기준으로 재계산하면 F=163.08·R²=0.767·DW=0.955로 달라짐). 슬라이드 표기와 실제 계산 사이의 불일치로 보이며, 본 리포트는 코드(`np.log`)와 동일하게 log(MEDV) 기준으로 일관되게 작성함
 
 ---
 
@@ -783,6 +785,8 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 
 ### 5-5. ML 기반 접근과의 비교 (참고)
 
+> ⚠ **검증 범위 안내**: 아래 CatBoost 등 ML 비교 결과는 본 리포트에 첨부된 `boston_housing_code.py`에는 포함되어 있지 않은 별도 분석이며, 강의자료(LAB05·LAB09)에도 해당 내용이 없어 이번 코드 실행 검증 과정에서는 재현·확인하지 못함. 아래 수치는 참고용으로만 남기며, 필요 시 해당 ML 비교 코드를 별도로 첨부해 재검증할 것을 권장함
+
 - 본 분석 과정에서 CatBoost 등 11종 머신러닝 알고리즘을 비교하는 방식도 별도로 시도하였음 — 이 방식은 **예측 성능은 더 높았으나(R²=0.888 vs OLS의 0.777, RMSE 원본척도 환산 기준으로도 ML 쪽이 더 낮음)**, 형식적인 가정검정이나 계수 기반의 통계적 해석(B, t, p, HC3)을 제공하지 않는다는 차이가 있음
 - 두 접근은 우열 관계가 아니라 **목적이 다름** — 본 프로젝트처럼 "계수를 해석해서 정책적 함의를 도출"하는 것이 목적이라면(1단계 참고) OLS 접근이 더 적합하고, 순수 예측 정확도가 목적이라면 ML 접근이 더 적합함. 본 리포트는 강의 자료가 제시한 OLS 트랙을 공식 결과로 채택하고, ML 비교 결과는 성능 참고치로만 남김
 
@@ -848,17 +852,19 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 ### 6-5. CHAS의 재해석
 
 - 2단계 단변량 검정(p=0.0016)과 4단계 최종 OLS 모델(p=0.004)에서 **CHAS는 일관되게 통계적으로 유의**하였음
-- 반면 별도로 시도했던 ML 기반 접근(CatBoost, 5-5 참고)에서는 CHAS의 변수중요도가 최하위권(1.7%)으로 나타났음
+- 반면 별도로 시도했던 ML 기반 접근(CatBoost, 5-5 참고 — 미검증 참고치)에서는 CHAS의 변수중요도가 최하위권(1.7%)으로 나타났음
 - 이 둘은 서로 다른 질문에 대한 답임 — **OLS 회귀계수의 유의성은 "다른 변수를 통제한 상태에서 CHAS 고유의 순수효과가 0이 아닌가"를 묻는 것**이고, **트리 모델의 변수중요도는 "이 변수가 예측 정확도를 얼마나 끌어올리는가"를 묻는 것**임. CHAS는 순수효과는 통계적으로 유의하지만 그 크기(β=0.071)가 작아, 예측 정확도에는 상대적으로 적게 기여하는 것으로 해석됨
 
 ## 참고문헌
 
 - Rosen, S. (1974). Hedonic prices and implicit markets: Product differentiation in pure competition. *Journal of Political Economy*, 82(1), 34–55.
-- Harrison, D., & Rubinfeld, D. L. (1978). Hedonic housing prices and the demand for clean air. *Journal of Environmental Economics and Management*, 5(1), 81–102.
+- Harrison, D., & Rubinfeld, D. L. (1978). Hedonic housing prices and the demand for clean air. *Journal of Environmental Economics and Management*, 5(1), 81–102. [https://doi.org/10.1016/0095-0696(78)90006-2](https://doi.org/10.1016/0095-0696(78)90006-2)
 - Belsley, D. A., Kuh, E., & Welsch, R. E. (1980). *Regression diagnostics: Identifying influential data and sources of collinearity*. Wiley.
 - Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for multiple regression and correlation. *Journal of the American Statistical Association*, 80(391), 580–598.
-- Gilley, O. W., & Pace, R. K. (1996). On the Harrison and Rubinfeld data. *Journal of Environmental Economics and Management*, 31(3), 403–405.
-- Pace, R. K., & Gilley, O. W. (1997). Using the spatial configuration of the data to improve estimation. *Journal of Real Estate Finance and Economics*, 14(3), 333–340.
+- Gilley, O. W., & Pace, R. K. (1996). On the Harrison and Rubinfeld data. *Journal of Environmental Economics and Management*, 31(3), 403–405. [https://doi.org/10.1006/jeem.1996.0052](https://doi.org/10.1006/jeem.1996.0052)
+- Pace, R. K., & Gilley, O. W. (1997). Using the spatial configuration of the data to improve estimation. *Journal of Real Estate Finance and Economics*, 14(3), 333–340. [https://doi.org/10.1023/A:1007762613901](https://doi.org/10.1023/A:1007762613901)
+
+※ 위 6건 중 Gilley & Pace(1996)·Pace & Gilley(1997) 두 건은 본 검증 과정에서 웹 검색으로 실재 여부·서지사항(권·호·페이지·DOI)을 재확인함. 나머지 4건은 이번 검증 범위에서 별도로 재조회하지 않았음
 
 ---
 

@@ -82,7 +82,7 @@
 | Rosen (1974) | 여러 특성이 묶인 재화의 가격을 특성별 잠재가격의 합으로 분해하는 이론 | 회귀계수를 "방 한 칸의 값", "저소득층 비율 1%p의 값"으로 해석하는 근거 |
 | Belsley, Kuh & Welsch (1980) | 이 데이터를 예제로 다중공선성 진단 기법(VIF 등)을 정립 | TAX-RAD 등 변수 간 강한 상관을 반드시 진단해야 함을 제시 |
 
-Rosen (1974). Hedonic Prices and Implicit Markets, *Journal of Political Economy* 82(1), 34–55.
+Rosen (1974). Hedonic Prices and Implicit Markets, *Journal of Political Economy* 82(1), 34–55. https://doi.org/10.1086/260169
 
 Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand for clean air, *Journal of Environmental Economics and Management*, 5(1), 81–102.
 
@@ -374,23 +374,24 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 | 중심 지표 | 중앙값 21.200, 평균 22.533 |
 | 이상치 | 상단 38건(7.5%), 하단 2건(0.4%) |
 | 이산점 | 50.0 한 값에 16건(3.2%) |
+| 분포형태 | 단봉 — 오른쪽 끝(50)에 인위적 군집 |
 
 ■ **2. 연속형 독립변수**
 
-| 변수 | 평균 | 중앙값 | 왜도 | 첨도 | 이상치비율 | 로그변환 판단 |
-|---|---|---|---|---|---|---|
-| CRIM | 3.614 | 0.257 | +5.223 | 37.131 | 13.0% | 로그 변환 대상 |
-| ZN | 11.364 | 0.000 | +2.226 | 4.032 | 13.4% | 로그 변환 대상 |
-| INDUS | 11.137 | 9.690 | +0.295 | -1.234 | 0.0% | 불필요 |
-| NOX | 0.555 | 0.538 | +0.729 | -0.065 | 0.0% | 검토 |
-| RM | 6.285 | 6.208 | +0.404 | 1.892 | 5.9% | 불필요 |
-| AGE | 68.575 | 77.500 | -0.599 | -0.968 | 0.0% | 그대로 사용 가능 |
-| DIS | 3.795 | 3.207 | +1.012 | 0.488 | 1.0% | 로그 변환 대상 |
-| RAD | 9.549 | 5.000 | +1.005 | -0.867 | 0.0% | 사실상 범주형, 최종 변수 선택에서 제외 검토 |
-| TAX | 408.237 | 330.000 | +0.670 | -1.142 | 0.0% | 검토 |
-| PTRATIO | 18.456 | 19.050 | -0.802 | -0.285 | 3.0% | 검토 |
-| B | 356.674 | 391.440 | -2.890 | 7.227 | 15.2% | 역방향 로그 변환 대상 |
-| LSTAT | 12.653 | 11.360 | +0.906 | 0.493 | 1.4% | 로그 변환 대상 |
+| 변수 | 평균 | 중앙값 | 왜도 | 첨도 | 분포형태 | 이상치비율 | 로그변환 판단 |
+|---|---|---|---|---|---|---|---|
+| CRIM | 3.614 | 0.257 | +5.223 | 37.131 | 단봉(0 근처 집중) | 13.0% | 로그 변환 대상 |
+| ZN | 11.364 | 0.000 | +2.226 | 4.032 | 단봉(0에 큰 덩어리) | 13.4% | 로그 변환 대상 |
+| INDUS | 11.137 | 9.690 | +0.295 | -1.234 | 다봉(쌍봉 경향) | 0.0% | 불필요 |
+| NOX | 0.555 | 0.538 | +0.729 | -0.065 | 다봉 경향 | 0.0% | 검토 |
+| RM | 6.285 | 6.208 | +0.404 | 1.892 | 단봉(대칭에 가까움) | 5.9% | 불필요 |
+| AGE | 68.575 | 77.500 | -0.599 | -0.968 | 단봉(100 쪽 몰림) | 0.0% | 그대로 사용 가능 |
+| DIS | 3.795 | 3.207 | +1.012 | 0.488 | 단봉 | 1.0% | 로그 변환 대상 |
+| RAD | 9.549 | 5.000 | +1.005 | -0.867 | 뚜렷한 이봉 | 0.0% | 사실상 범주형, 최종 변수 선택에서 제외 검토 |
+| TAX | 408.237 | 330.000 | +0.670 | -1.142 | 이봉 | 0.0% | 검토 |
+| PTRATIO | 18.456 | 19.050 | -0.802 | -0.285 | 다봉(값 군집) | 3.0% | 검토 |
+| B | 356.674 | 391.440 | -2.890 | 7.227 | 단봉(396 쪽 몰림) | 15.2% | 역방향 로그 변환 대상 |
+| LSTAT | 12.653 | 11.360 | +0.906 | 0.493 | 단봉 | 1.4% | 로그 변환 대상 |
 
 ※ AGE는 100 부근에 값이 몰려 있으나(단변량 분석에서 100.0인 건 43건, 99대는 2건으로 확인됨) 좌편향 정도가 심하지 않고 분포 자체는 단봉이어서, 별도의 절단 처리 없이 그대로 사용해도 무방하다고 판단하였음
 
@@ -855,10 +856,10 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 
 ## 참고문헌
 
-- Rosen, S. (1974). Hedonic prices and implicit markets: Product differentiation in pure competition. *Journal of Political Economy*, 82(1), 34–55.
+- Rosen, S. (1974). Hedonic prices and implicit markets: Product differentiation in pure competition. *Journal of Political Economy*, 82(1), 34–55. https://doi.org/10.1086/260169
 - Harrison, D., & Rubinfeld, D. L. (1978). Hedonic housing prices and the demand for clean air. *Journal of Environmental Economics and Management*, 5(1), 81–102. [https://doi.org/10.1016/0095-0696(78)90006-2](https://doi.org/10.1016/0095-0696(78)90006-2)
-- Belsley, D. A., Kuh, E., & Welsch, R. E. (1980). *Regression diagnostics: Identifying influential data and sources of collinearity*. Wiley.
-- Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for multiple regression and correlation. *Journal of the American Statistical Association*, 80(391), 580–598.
+- Belsley, D. A., Kuh, E., & Welsch, R. E. (1980). *Regression diagnostics: Identifying influential data and sources of collinearity*. Wiley. https://doi.org/10.1002/0471725153
+- Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for multiple regression and correlation. *Journal of the American Statistical Association*, 80(391), 580–598. https://doi.org/10.1080/01621459.1985.10478157
 - Gilley, O. W., & Pace, R. K. (1996). On the Harrison and Rubinfeld data. *Journal of Environmental Economics and Management*, 31(3), 403–405. [https://doi.org/10.1006/jeem.1996.0052](https://doi.org/10.1006/jeem.1996.0052)
 - Pace, R. K., & Gilley, O. W. (1997). Using the spatial configuration of the data to improve estimation. *Journal of Real Estate Finance and Economics*, 14(3), 333–340. [https://doi.org/10.1023/A:1007762613901](https://doi.org/10.1023/A:1007762613901)
 

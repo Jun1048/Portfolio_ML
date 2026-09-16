@@ -86,8 +86,6 @@ Rosen (1974). Hedonic Prices and Implicit Markets, *Journal of Political Economy
 
 Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand for clean air, *Journal of Environmental Economics and Management*, 5(1), 81–102.
 
-> 이론이 없으면 회귀계수는 그냥 숫자임. Rosen의 이론이 있어야 "방이 하나 늘어나면 집값이 얼마 오른다"는 해석이 성립함
-
 ---
 
 ### 1-5. 분석 범위 · 단위 · 질문
@@ -113,7 +111,7 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 
 > MEDV 값은 1970년 달러 기준이므로 오늘날의 부동산 시세와 직접 비교해서는 안 됨
 
-- Q4는 특히 신중해야 함 — 원 데이터 설계 목적(NOX에 대한 WTP 추정)과 지금 던지는 질문(주택가격 예측)이 다르기 때문에, 실무 적용 가능성에 대한 답은 조심스럽게 접근해야 함
+- Q4의 경우 원 데이터 설계 목적(NOX에 대한 WTP 추정)과 지금 던지는 질문(주택가격 예측)이 다르기 때문에, 실무 적용 가능성에 대한 답은 조심스럽게 접근해야 함
 
 ---
 

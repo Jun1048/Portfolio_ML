@@ -26,7 +26,7 @@
 
 (1) Data Collection
 - 수집대상 : 1970년 보스턴 SMSA 내 506개 census tract, 변수 14개(CRIM~MEDV)
-- 수집 출처 : Harrison & Rubinfeld(1978) 원논문 → UCI ML Repository → Kaggle(altavish/boston-housing-dataset)
+- 수집 출처 : Harrison & Rubinfeld(1978) 원논문 → UCI ML Repository → Kaggle(altavish/boston-housing-dataset) 등 여러 미러에 공개된 버전(사용한 506행 값은 GitHub 미러(selva86/datasets) 기준으로 원 강의자료 스크린샷과 일치 확인함)
 
 (2) Data Preprocessing
 - 결측치·중복행 0건 확인
@@ -46,12 +46,12 @@
 
 > 저소득층비율(LSTAT)의 표준화계수(|β|=0.584)가 압도적 1위<br/>
 > 고속도로접근성(RAD)은 단순 상관관계(음)와 다변량 회귀계수(양)의 부호가 반전 — 다른 변수를 통제하면 순수효과 방향이 달라짐을 확인<br/>
-> 찰스강인접(CHAS)은 회귀계수상 유의(p=0.004)하나 별도 시도한 ML 변수중요도 분석에서는 기여도가 낮게 나와, "통계적 유의성"과 "예측 기여도"가 다른 질문임을 확인
+> 찰스강인접(CHAS)은 회귀계수상 유의(p=0.004)하나 별도 시도한(미검증) ML 변수중요도 분석에서는 기여도가 낮게 나와, "통계적 유의성"과 "예측 기여도"가 다른 질문임을 확인
 
 (4) Review
 - 회귀분석 4대 가정(선형성·정규성·등분산성·독립성)이 전부 위배됨 — Ramsey RESET, Kolmogorov-Smirnov, Breusch-Pagan, Durbin-Watson 검정으로 확인
 - 종속변수가 $50,000에서 상한 절단되어 있어, 고가 주택 구간 예측 신뢰도가 낮음
-- 별도로 시도한 ML 기반 접근(CatBoost 등)은 예측 성능은 더 높았으나(R²=0.888) 형식적 가정검정·계수 해석을 제공하지 않아, 본 리포트는 해석 가능성을 우선한 OLS 결과를 공식 채택함
+- 별도로 시도한 ML 기반 접근(CatBoost 등)은 예측 성능은 더 높았으나(R²=0.888, 본 포트폴리오 코드에는 미포함되어 있어 별도로 재검증되지 않은 참고치임) 형식적 가정검정·계수 해석을 제공하지 않아, 본 리포트는 해석 가능성을 우선한 OLS 결과를 공식 채택함
 - 원 데이터의 수집 목적(환경정책 편익 추정)과 현재 분석 목적(가격예측)이 달라, 실무 적용 시 이 괴리를 반드시 고지해야 함
 
 보러가기: [Boston Housing 포트폴리오](https://github.com/Jun1048/Portfolio_ML/tree/main/Boston%20Housing)

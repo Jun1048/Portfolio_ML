@@ -37,7 +37,7 @@
 | 연구 | 주요 내용 |
 |---|---|
 | GIA(미국보석학회), 1950년대 | 4C 등급체계 확립. carat·color·clarity 3요소는 2,000년 이상 된 인도의 전통 감정 기준에서 유래함 |
-| Caudill et al. (1997) | 헤도닉 회귀를 다이아몬드 가격에 적용, 캐럿 중량이 가격에 가장 큰 영향을 미치고 cut·color·clarity가 유의한 양(+)의 영향을 준다고 보고함 |
+| Lee, Caudill & Mixon (2014) | 헤도닉 회귀를 다이아몬드 가격에 적용, 캐럿 중량이 가격에 가장 큰 영향을 미치고 cut·color·clarity가 유의한 양(+)의 영향을 준다고 보고함 |
 
 ■ **헤도닉 가격이론(계수 해석 근거)**
 
@@ -497,7 +497,7 @@ OLS 모형(5-1절)과 같은 결론(등급이 높을수록 캐럿 통제 후 가
 
 | 방법론적 시사점 | 선행연구 대비 학문적 기여 |
 |---|---|
-| 변수 축소·다중공선성 처리를 기계적 알고리즘에만 맡기지 않고, 도메인 지식과 실측 성능 비교를 병행해야 함을 실측으로 확인함 | 선행 헤도닉 회귀 연구(Caudill et al. 1997)가 정성적으로만 보고한 "캐럿이 가장 큰 영향을 미친다"를, 본 분석은 탄력성(1.883)이라는 정량적 수치로 구체화함 |
+| 변수 축소·다중공선성 처리를 기계적 알고리즘에만 맡기지 않고, 도메인 지식과 실측 성능 비교를 병행해야 함을 실측으로 확인함 | 선행 헤도닉 회귀 연구(Lee, Caudill & Mixon, 2014)가 정성적으로만 보고한 "캐럿이 가장 큰 영향을 미친다"를, 본 분석은 탄력성(1.883)이라는 정량적 수치로 구체화함 |
 
 ---
 
@@ -528,7 +528,7 @@ OLS 모형(5-1절)과 같은 결론(등급이 높을수록 캐럿 통제 후 가
 
 ## 참고문헌 (APA)
 
-Caudill, S. B., et al. (1997). Shine bright like a diamond: A hedonic model of grading and pricing an experience good. *Royal Economic Society*.
+Lee, J. A., Caudill, S. B., & Mixon, F. G. (2014). Shine bright like a diamond: A hedonic model of grading and pricing an experience good. *Applied Economics*, *46*(16), 1829–1838. https://doi.org/10.1080/00036846.2014.884707
 
 Wickham, H. (n.d.). *diamonds: Prices of over 50,000 round cut diamonds*. ggplot2 documentation. https://ggplot2.tidyverse.org/reference/diamonds.html
 

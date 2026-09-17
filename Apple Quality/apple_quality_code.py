@@ -1,7 +1,5 @@
 # ======================================================================
-# Apple Quality 사과 품질 예측 - 전체 분석 파이프라인
-# 데이터 로딩 -> 품질점검 -> EDA -> 전처리 -> 로지스틱 회귀 및 가정검정
-# -> 다중 모델 비교 -> 신뢰성 검증 -> 변수 중요도 및 SHAP 분석
+# Apple Quality 사과 품질 예측
 # ======================================================================
 
 import warnings
@@ -27,7 +25,7 @@ from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 import shap
 
-RANDOM_STATE = 42
+RANDOM_STATE = 3217
 
 # ======================================================================
 # 1. 데이터 로딩 및 구조 점검
@@ -102,11 +100,13 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y
 )
 
+# 거리·커널 기반 비교 모형(KNN/SVC/GaussianNB)에만 쓸 표준화 버전 (7번에서 사용)
 scaler = StandardScaler()
 X_train_s = pd.DataFrame(scaler.fit_transform(X_train), columns=num_cols, index=X_train.index)
 X_test_s = pd.DataFrame(scaler.transform(X_test), columns=num_cols, index=X_test.index)
 
-X_train_const = sm.add_constant(X_train_s)
+# 로지스틱 회귀는 오즈비 해석 일관성을 위해 원본 제공 척도를 그대로 사용
+X_train_const = sm.add_constant(X_train)
 vif_data = pd.DataFrame()
 vif_data["변수"] = X_train_const.columns
 vif_data["VIF"] = [variance_inflation_factor(X_train_const.values, i) for i in range(X_train_const.shape[1])]
@@ -137,7 +137,7 @@ def boxtidwell_diagnose(data_lin, source_for_ln, target_vars, y):
 
 
 # 위배 변수를 가장 심한 것부터 하나씩 처방하고, 매 라운드 나머지 변수를 재진단
-data_lin = X_train_s.copy()
+data_lin = X_train.copy()
 active_vars = num_cols.copy()
 recipe = []
 
@@ -147,7 +147,7 @@ aic_prev = fit_prev.aic
 round_num = 0
 while True:
     round_num += 1
-    diag = boxtidwell_diagnose(data_lin, X_train_s, active_vars, y_train)
+    diag = boxtidwell_diagnose(data_lin, X_train, active_vars, y_train)
     violating = sorted([d for d in diag if d[2] < 0.05], key=lambda d: -abs(d[1]))
     if not violating:
         print(f"[라운드 {round_num}] 위배 0종 -> 종료")
@@ -168,6 +168,7 @@ while True:
 
 print("\n제곱항 처방 변수:", recipe)
 print("처방 제외(선형성 충족):", [c for c in num_cols if c not in recipe])
+print("최종 Pseudo R²:", fit_prev.prsquared)
 
 # 독립성 검정 (Durbin-Watson)
 from statsmodels.stats.stattools import durbin_watson
@@ -178,14 +179,14 @@ print("Durbin-Watson:", durbin_watson(fit_prev.resid_pearson))
 # ======================================================================
 
 X_train_fix = data_lin.copy()  # 반복 처방이 모두 반영된 학습 데이터
-X_test_fix = X_test_s.copy()
+X_test_fix = X_test.copy()
 for v in recipe:
-    X_test_fix[f"{v}_sq"] = X_test_s[v] ** 2
+    X_test_fix[f"{v}_sq"] = X_test[v] ** 2
 
 model_base = LogisticRegression(random_state=RANDOM_STATE, max_iter=1000)
-model_base.fit(X_train_s, y_train)
-pred_base = model_base.predict(X_test_s)
-proba_base = model_base.predict_proba(X_test_s)[:, 1]
+model_base.fit(X_train, y_train)
+pred_base = model_base.predict(X_test)
+proba_base = model_base.predict_proba(X_test)[:, 1]
 print("기준선 Accuracy:", accuracy_score(y_test, pred_base))
 
 model_fix = LogisticRegression(random_state=RANDOM_STATE, max_iter=1000)

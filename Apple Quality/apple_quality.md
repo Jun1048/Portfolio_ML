@@ -644,13 +644,13 @@ R² 대신 CatBoost Accuracy 0.8825·ROC-AUC 0.9565는 사과 100개 중 약 12�
 
 ## 참고문헌 (APA)
 
-Box, G. E. P., & Tidwell, P. W. (1962). Transformation of the independent variables. *Technometrics*, *4*(4), 531–550.
+Box, G. E. P., & Tidwell, P. W. (1962). Transformation of the independent variables. *Technometrics*, *4*(4), 531–550. https://doi.org/10.1080/00401706.1962.10490038
 
-Horst, P. (1941). The role of predictor variables which are independent of the criterion. *Social Science Research Council*, *48*, 431–436.
+Horst, P. (1941). The role of predictor variables which are independent of the criterion. *Social Science Research Council*, *48*, 431–436. (원문 링크는 출판연도가 오래되어 확인 불가 — 대신 이 현상을 설명한 2차 자료: CenterStat. (2025). *What is a suppressor variable, and how does this differ from confounding and mediation?* https://centerstat.org/what-is-a-suppressor/)
 
 Zhang, et al. (2025). A precise apple quality prediction model integrating driving factor screening and BP neural network. *PMC*. https://pmc.ncbi.nlm.nih.gov/articles/PMC12737044/
 
-Hosmer, D. W., & Lemeshow, S. (1989). *Applied logistic regression*. Wiley.
+Hosmer, D. W., & Lemeshow, S. (1989). *Applied logistic regression*. Wiley. https://onlinelibrary.wiley.com/doi/book/10.1002/0471722146
 
 ---
 

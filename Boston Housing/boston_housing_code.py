@@ -2,7 +2,8 @@
 # Boston Housing 주택가격 예측 — 전체 분석 코드
 # ==============================================================
 #
-# 원본 데이터: Boston Housing Dataset (Kaggle에 공개된 데이터)
+# 원본 데이터: Boston Housing Dataset (Harrison & Rubinfeld, 1978 논문 기반,
+# UCI Machine Learning Repository 및 Kaggle에 공개된 506행 x 14열 데이터)
 # 아래 코드는 원본 CSV(boston_housing_raw.csv)를 입력으로 사용함
 
 import numpy as np
@@ -110,7 +111,7 @@ def judge_log_transform(skew, kurt):
 
 
 desc_df['log_need'] = desc_df.apply(lambda row: judge_log_transform(row['skew'], row['kurt']), axis=1)
-
+# ZN은 최솟값이 0이라 순수 log 대신 log1p를 별도 지정함
 desc_df.loc['ZN', 'log_need'] = 'log1p'
 print(desc_df[['skew', 'kurt', 'log_need']])
 
@@ -159,14 +160,14 @@ print("두 집합이 동일 town 그룹인지 확인:",
 
 print(df3['CHAS'].value_counts())
 # CHAS는 유일한 명목형 변수이며 심한 불균형(93.1%/6.9%) -> 검정력 저하 가능성 있으나
-# 버리지 않고 2-2에서 직접 검정으로 확인
+# 버리지 않고 2-2에서 직접 검정으로 확인함
 
 # --------------------------------------------------------------
 # 2-2. 이변량 분석
 # --------------------------------------------------------------
 
 # 1. 상관분석 (연속형 독립변수 -> 종속변수, Spearman)
-# MEDV 자체가 비정규(왜도 +1.108)라서 12개 변수 전체에 Spearman을 일괄 적용
+# MEDV 자체가 비정규(왜도 +1.108)라서 12개 변수 전체에 Spearman을 일괄 적용함
 num_fields = ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']
 corr_result = []
 for field in num_fields:
@@ -293,7 +294,7 @@ remain_cols, max_vif = reduce_vif(df_ck2, continuous_cols, threshold=10.0)
 print("남은 변수:", remain_cols)
 print("최대 VIF:", round(max_vif, 2))
 
-df_ck3 = df_ck2.copy()  
+df_ck3 = df_ck2.copy()  # 제거된 변수가 없어 체크포인트2와 동일
 df_ck3.to_excel("boston_checkpoint_3.xlsx", index=False)
 
 # --------------------------------------------------------------
@@ -322,15 +323,7 @@ all_x = continuous_cols + ["CHAS"]
 
 
 def backward_ols(data, target_col, xcols, use_hc3=False):
-    """유의하지 않은 변수(p>0.05)를 하나씩 제거하는 후진소거 OLS
-
-    참고: use_hc3=True일 때 F-statistic도 HC3(이분산 강건) 기준으로 계산됨.
-    강의자료(LAB09-06) 예시 슬라이드의 F=158.21은 동일 모델을 classical
-    (cov_type='nonrobust') 기준으로 계산한 값이라 여기서 나오는 F=144.5와
-    다름 — 계산 오류가 아니라 표준오차 산정방식 차이임(등분산성 위배가
-    확인되어 본 코드는 의도적으로 HC3를 사용함). R²·Adj.R²·Durbin-Watson은
-    cov_type에 영향받지 않아 두 방식 모두 동일하게 나옴.
-    """
+    """유의하지 않은 변수(p>0.05)를 하나씩 제거하는 후진소거 OLS"""
     y = data[target_col]
     cols = list(xcols)
     while True:
@@ -352,7 +345,8 @@ result = []
 for name, data in checkpoints.items():
     log = log1p_y[name]
     print(f"=== {name} ===")
-
+    # 체크포인트0은 등분산성이 아직 확인되지 않았으므로 일반 표준오차,
+    # 로그변환 이후 체크포인트는 HC3(강건표준오차)를 사용함
     fit, cols = backward_ols(data, "MEDV", all_x, use_hc3=log)
     fits[name] = (fit, cols)
 
@@ -436,3 +430,55 @@ print("Breusch-Pagan LM:", round(bp[0], 3), "p:", round(bp[1], 4))
 # 4. 독립성 - Durbin-Watson
 dw = durbin_watson(final_fit.resid)
 print("Durbin-Watson:", round(dw, 3))
+
+
+# ==============================================================
+# 6-1 질문3 보완 — 홀드아웃(학습:검증=8:2) 검증 성능
+# ==============================================================
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, root_mean_squared_error, mean_absolute_error
+
+idx_tr, idx_te = train_test_split(final_data.index, test_size=0.2, random_state=42)
+Xtr_h = sm.add_constant(final_data.loc[idx_tr, final_cols])
+Xte_h = sm.add_constant(final_data.loc[idx_te, final_cols])
+ytr_h = final_data.loc[idx_tr, 'MEDV']
+yte_h_log = final_data.loc[idx_te, 'MEDV']
+yte_h_orig = origin.loc[idx_te, 'MEDV']
+
+fit_holdout = sm.OLS(ytr_h, Xtr_h).fit(cov_type='HC3')
+pred_te_log = fit_holdout.predict(Xte_h)
+pred_te_orig = np.exp(pred_te_log)
+
+print("[홀드아웃 검증] R2(원본척도):", round(r2_score(yte_h_orig, pred_te_orig), 3))
+print("[홀드아웃 검증] RMSE(원본척도):", round(root_mean_squared_error(yte_h_orig, pred_te_orig), 3))
+print("[홀드아웃 검증] MAE(원본척도):", round(mean_absolute_error(yte_h_orig, pred_te_orig), 3))
+
+
+# ==============================================================
+# 3-1-1 보완 — AGE=100 절단 플래그 유의성 검증
+# ==============================================================
+
+final_data['is_age_capped'] = (origin['AGE'] == 100).astype(int)
+X_age = sm.add_constant(final_data[final_cols + ['is_age_capped']])
+fit_age = sm.OLS(final_data['MEDV'], X_age).fit(cov_type='HC3')
+print("is_age_capped 계수:", round(fit_age.params['is_age_capped'], 4),
+      "p:", round(fit_age.pvalues['is_age_capped'], 4))
+
+
+# ==============================================================
+# 3-8 보완 — MEDV 절단 16건 제외 후 490개 재분석 (Pace & Gilley 1997 재현)
+# ==============================================================
+
+mask_490 = origin['MEDV'] < 50.0
+data_490 = final_data.loc[mask_490]
+orig_490 = origin.loc[mask_490]
+
+fit_490, cols_490 = backward_ols(data_490, 'MEDV', final_cols, use_hc3=True)
+print("490개 재분석 최종 변수:", cols_490)
+
+pred_490_log = fit_490.predict(sm.add_constant(data_490[cols_490]))
+pred_490_orig = np.exp(pred_490_log)
+print("[490개] R2(원본척도):", round(r2_score(orig_490['MEDV'], pred_490_orig), 3))
+print("[490개] RMSE(원본척도):", round(root_mean_squared_error(orig_490['MEDV'], pred_490_orig), 3))
+print("[490개] MAE(원본척도):", round(mean_absolute_error(orig_490['MEDV'], pred_490_orig), 3))

@@ -1,8 +1,11 @@
-# ============================================
-# Diamond Price Prediction 다이아몬드 가격 예측
-# ============================================
+# ==============================================================
+# Diamond Price Prediction 다이아몬드 가격 예측 — 전체 분석 코드
+# ==============================================================
 #
-# 원본 데이터: diamonds 데이터셋(Kaggle)
+# 원본 데이터: diamonds 데이터셋(Kaggle 재배포본, 53,940행 x 10열)
+# 주 모델링 파이프라인은 강의 교재의 PBT(선형회귀 파이프라인) 노트북을 그대로 재현함
+# (OLS 회귀 + 후진소거법, 도메인 지식 트랙과 기계적 트랙을 비교)
+#
 # 아래 코드는 원본 CSV(diamonds_price_raw.csv)를 입력으로 사용함
 
 import warnings
@@ -184,6 +187,51 @@ print(final_fit.summary())
 
 print("\ncarat 계수(탄력성):", final_fit.params["carat"])
 print("-> 캐럿(중량)이 1% 증가하면 가격은 약", round(final_fit.params["carat"], 3), "% 상승함")
+
+# ----------------------------------------------------------------
+# 5-1-1. 홀드아웃 검증 — 처음 보는 데이터에 대한 예측 정확도
+#        (5-1의 계수는 전체데이터 적합이라 계수 해석용, 예측 정확도는 별도 검증 필요)
+# ----------------------------------------------------------------
+from sklearn.model_selection import train_test_split as _tts
+
+_train_idx, _test_idx = _tts(d_domain.index, test_size=0.2, random_state=RANDOM_STATE)
+_train, _test = d_domain.loc[_train_idx].copy(), d_domain.loc[_test_idx].copy()
+
+for c in ["price", "carat", "table"]:
+    if c == "carat":
+        _train[c] = np.log(_train[c]); _test[c] = np.log(_test[c])
+    else:
+        _train[c] = np.log1p(_train[c]); _test[c] = np.log1p(_test[c])
+
+for c in ["price", "carat", "table"]:
+    q1, q3 = _train[c].quantile([0.25, 0.75])
+    iqr = q3 - q1
+    lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+    _train[c] = _train[c].clip(lo, hi)
+    _test[c] = _test[c].clip(lo, hi)
+
+_train_d = pd.get_dummies(_train, columns=nominal_cols, drop_first=True)
+_test_d = pd.get_dummies(_test, columns=nominal_cols, drop_first=True)
+_test_d = _test_d.reindex(columns=_train_d.columns, fill_value=0)
+
+_y_tr = _train_d["price"]
+_X_tr = sm.add_constant(_train_d.drop(columns=["price"]).astype(float))
+_holdout_model = backward_elim(_y_tr, _X_tr)
+
+_X_te = sm.add_constant(_test_d[_holdout_model.params.index.drop("const")].astype(float), has_constant="add")
+_pred_log = _holdout_model.predict(_X_te)
+_y_te_log = _test_d["price"]
+_pred_dollar, _y_te_dollar = np.expm1(_pred_log), np.expm1(_y_te_log)
+
+_holdout_rmse = np.sqrt(np.mean((_y_te_dollar - _pred_dollar) ** 2))
+_holdout_mae = np.mean(np.abs(_y_te_dollar - _pred_dollar))
+_holdout_r2_dollar = 1 - np.sum((_y_te_dollar - _pred_dollar) ** 2) / np.sum((_y_te_dollar - _y_te_dollar.mean()) ** 2)
+_holdout_r2_log = 1 - np.sum((_y_te_log - _pred_log) ** 2) / np.sum((_y_te_log - _y_te_log.mean()) ** 2)
+
+print(f"\n=== 홀드아웃 검증(n={len(_test)}, 처음 보는 데이터 기준) ===")
+print(f"RMSE(달러)={_holdout_rmse:.2f}  MAE(달러)={_holdout_mae:.2f}  "
+      f"R2(달러척도)={_holdout_r2_dollar:.4f}  R2(로그척도)={_holdout_r2_log:.4f}")
+print("-> 전체데이터 적합 RMSE($796.68)와 비슷한 수준이면 과대적합 신호 없음")
 
 resid = final_fit.resid
 X_final = sm.add_constant(final_fit.model.exog, has_constant="skip")

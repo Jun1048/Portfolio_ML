@@ -1,5 +1,7 @@
 # ======================================================================
-# Apple Quality 사과 품질 예측
+# Apple Quality 사과 품질 예측 - 전체 분석 파이프라인
+# 데이터 로딩 -> 품질점검 -> EDA -> 전처리 -> 로지스틱 회귀 및 가정검정
+# -> 다중 모델 비교 -> 신뢰성 검증 -> 변수 중요도 및 SHAP 분석
 # ======================================================================
 
 import warnings
@@ -25,7 +27,7 @@ from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 import shap
 
-RANDOM_STATE = 3217
+RANDOM_STATE = 42
 
 # ======================================================================
 # 1. 데이터 로딩 및 구조 점검
@@ -173,6 +175,29 @@ print("최종 Pseudo R²:", fit_prev.prsquared)
 # 독립성 검정 (Durbin-Watson)
 from statsmodels.stats.stattools import durbin_watson
 print("Durbin-Watson:", durbin_watson(fit_prev.resid_pearson))
+
+# 관측치 영향력 — Cook's distance (1·3단계에서 예고한 IQR 이상치 재검토)
+infl = fit_prev.get_influence()
+cooks = infl.cooks_distance[0]
+print("\nCook's distance 최댓값:", cooks.max())
+print("Cook's distance > 1 (강한 영향력) 건수:", (cooks > 1).sum())
+
+Q1_o, Q3_o = X_train.quantile(0.25), X_train.quantile(0.75)
+IQR_o = Q3_o - Q1_o
+iqr_outlier_mask = ((X_train < Q1_o - 1.5*IQR_o) | (X_train > Q3_o + 1.5*IQR_o)).any(axis=1)
+print("IQR 기준 이상치(학습셋):", iqr_outlier_mask.sum(), "/", len(X_train))
+
+top20_idx = pd.Series(cooks, index=X_train.index).sort_values(ascending=False).head(20).index
+print("영향력 상위 20건 중 IQR 이상치와 겹치는 수:", iqr_outlier_mask.loc[top20_idx].sum())
+
+top5_idx = pd.Series(cooks, index=X_train.index).sort_values(ascending=False).head(5).index
+data_lin_removed = data_lin.drop(index=top5_idx)
+y_train_removed = y_train.drop(index=top5_idx)
+fit_removed = sm.Logit(y_train_removed, sm.add_constant(data_lin_removed)).fit(disp=0)
+max_rel_change = ((fit_removed.params - fit_prev.params).abs() / fit_prev.params.abs()).max()
+print("영향력 최상위 5건 제거 후 계수 최대 변화율:", max_rel_change)
+print("AIC 변화:", fit_prev.aic, "->", fit_removed.aic)
+# 결론: Cook's distance가 통상 임계값(1.0)을 넘는 관측치가 없어 IQR 이상치를 삭제하지 않고 유지함
 
 # ======================================================================
 # 6. 처방 - 계층 원칙에 따른 제곱항 추가 및 성능 비교

@@ -626,7 +626,7 @@ CatBoost 내부 지표(Feature Importance)와 SHAP 순위가 대체로 일치하
 
 | 방법론적 시사점 | 선행연구 대비 학문적 기여 |
 |---|---|
-| 성능 1위 모델(CatBoost)이 아니라 설명 가능성이 필요한 상황에서는 처방된 로지스틱 회귀를 병행 사용하도록 이중 트랙으로 최종 모형을 선정함 | 이 데이터셋을 다룬 기존 사례들은 대부분 여러 분류 모델의 정확도만 비교하는 구조였고, 로지스틱 회귀의 가정(로짓 선형성, 억제변수) 자체를 검정한 사례는 확인되지 않음. 본 분석은 단순 정확도 비교에 그치지 않고, ①단변량-다변량 결과 불일치를 억제변수 개념으로 설명 ②Box-Tidwell 검정으로 로짓 비선형성을 정량적으로 진단하고 실제 처방까지 수행 ③SHAP과 오즈비라는 서로 다른 두 방법론의 방향 일치로 결과를 교차검증한 점에서 차별화됨. 한편 사과 품질을 예측하는 별도의 학술 연구(생리학적 지표 기반)에서도 상관분석 기반 핵심 요인 선별 → 모델 구축 → 변수 중요도·민감도 분석을 통한 모형 간소화라는 흐름이 표준적으로 쓰이고 있음이 확인됨(Zhang, 2025) — 본 분석이 취한 "단변량 스크리닝 → 다변량 검증 → 중요도 재검증" 흐름이 이 분야의 일반적인 방법론과 궤를 같이함을 뒷받침함 |
+| 성능 1위 모델(CatBoost)이 아니라 설명 가능성이 필요한 상황에서는 처방된 로지스틱 회귀를 병행 사용하도록 이중 트랙으로 최종 모형을 선정함 | 이 데이터셋을 다룬 기존 사례들은 대부분 여러 분류 모델의 정확도만 비교하는 구조였고, 로지스틱 회귀의 가정(로짓 선형성, 억제변수) 자체를 검정한 사례는 확인되지 않음. 본 분석은 단순 정확도 비교에 그치지 않고, ①단변량-다변량 결과 불일치를 억제변수 개념으로 설명 ②Box-Tidwell 검정으로 로짓 비선형성을 정량적으로 진단하고 실제 처방까지 수행 ③SHAP과 오즈비라는 서로 다른 두 방법론의 방향 일치로 결과를 교차검증한 점에서 차별화됨. 한편 사과 품질을 예측하는 별도의 학술 연구(생리학적 지표 기반)에서도 상관분석 기반 핵심 요인 선별 → 모델 구축 → 변수 중요도·민감도 분석을 통한 모형 간소화라는 흐름이 표준적으로 쓰이고 있음이 확인됨(Zeng et al., 2025) — 본 분석이 취한 "단변량 스크리닝 → 다변량 검증 → 중요도 재검증" 흐름이 이 분야의 일반적인 방법론과 궤를 같이함을 뒷받침함 |
 
 R² 대신 CatBoost Accuracy 0.8825·ROC-AUC 0.9565는 사과 100개 중 약 12개는 오분류된다는 뜻 — 무인 자동 폐기·출하 확정용으로는 제안하지 않으며, 사람이 최종 확인하는 보조 도구로 제안하였음.
 
@@ -661,7 +661,7 @@ Box, G. E. P., & Tidwell, P. W. (1962). Transformation of the independent variab
 
 Horst, P. (1941). The role of predictor variables which are independent of the criterion. *Social Science Research Council*, *48*, 431–436. (원문 링크는 출판연도가 오래되어 확인 불가 — 대신 이 현상을 설명한 2차 자료: CenterStat. (2025). *What is a suppressor variable, and how does this differ from confounding and mediation?* https://centerstat.org/what-is-a-suppressor/)
 
-Zhang, (2025). A precise apple quality prediction model integrating driving factor screening and BP neural network. *PMC*. https://pmc.ncbi.nlm.nih.gov/articles/PMC12737044/
+Zeng, J., Yu, M., Chen, Y., Li, X., Bao, J., & Pu, X. (2025). A precise apple quality prediction model integrating driving factor screening and BP neural network. *Plants*, *14*(24), 3795. https://doi.org/10.3390/plants14243795
 
 Hosmer, D. W., & Lemeshow, S. (1989). *Applied logistic regression*. Wiley. https://onlinelibrary.wiley.com/doi/book/10.1002/0471722146
 

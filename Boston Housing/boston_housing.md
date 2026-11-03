@@ -897,6 +897,7 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 ### 6-3. 시사점 및 한계
 
 - HC3(이분산 강건표준오차)로 등분산성 위배의 영향은 일부 보정했으나, 선형성 위배(Ramsey RESET)와 독립성 위배(공간적 자기상관 가능성)는 보정하지 못한 한계로 남음
+- 변수 B는 흑인 비율을 1000(Bk−0.63)² 형태로 변환한 지수로, 인종 분리가 주택가격에 영향을 준다는 가정을 바탕으로 만들어진 변수임. 이 윤리적 문제 때문에 scikit-learn은 1.0 버전에서 이 데이터셋의 제공 중단을 예고하고 1.2 버전에서 제거하였음. 본 분석에서 B는 후진소거로 최종 모형에서 제외되었으나, 이 데이터셋을 활용할 때는 해당 문제를 함께 밝혀야 함
 - 위경도 데이터가 없어 공간적 자기상관을 직접 모델링할 수 없었던 점(1단계)이, 5-4에서 확인한 독립성 위배(Durbin-Watson=0.945)의 원인 중 하나로 추정됨
 - CHAS는 2단계 단변량 검정, 4단계 회귀계수 모두에서 일관되게 유의하였으나, 그 영향력의 "크기"는 두 단계에서 다르게 나타남(6-5 참고) — 통계적 유의성과 영향력의 크기는 서로 다른 질문이라는 점을 확인함
 
@@ -928,6 +929,7 @@ Harrison, D., & Rubinfeld, D.L. (1978). Hedonic housing prices and the demand fo
 - Breiman, L., & Friedman, J. H. (1985). Estimating optimal transformations for multiple regression and correlation. *Journal of the American Statistical Association*, 80(391), 580–598. https://doi.org/10.1080/01621459.1985.10478157
 - Gilley, O. W., & Pace, R. K. (1996). On the Harrison and Rubinfeld data. *Journal of Environmental Economics and Management*, 31(3), 403–405. [https://doi.org/10.1006/jeem.1996.0052](https://doi.org/10.1006/jeem.1996.0052)
 - Pace, R. K., & Gilley, O. W. (1997). Using the spatial configuration of the data to improve estimation. *Journal of Real Estate Finance and Economics*, 14(3), 333–340. [https://doi.org/10.1023/A:1007762613901](https://doi.org/10.1023/A:1007762613901)
+- scikit-learn developers. (n.d.). *sklearn.datasets.load_boston* (Version 1.1). https://scikit-learn.org/1.1/modules/generated/sklearn.datasets.load_boston.html
 
 
 ---

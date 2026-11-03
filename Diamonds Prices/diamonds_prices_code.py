@@ -5,7 +5,7 @@
 # 원본 데이터: diamonds 데이터셋(Kaggle 재배포본, 53,940행 x 10열)
 # (OLS 회귀 + 후진소거법, 도메인 지식 트랙과 기계적 트랙을 비교)
 #
-# 아래 코드는 원본 CSV(diamonds_price_raw.csv)를 입력으로 사용함
+# 아래 코드는 원본 CSV(diamonds_prices_raw.csv)를 입력으로 사용함
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -23,7 +23,7 @@ RANDOM_STATE = 3217
 # ----------------------------------------------------------------
 # 1. 프로젝트 개요 — 데이터 구조/품질 점검
 # ----------------------------------------------------------------
-df = pd.read_csv("diamonds_price_raw.csv")
+df = pd.read_csv("diamonds_prices_raw.csv")
 print("원본 데이터 크기:", df.shape)
 print("중복행:", df.duplicated().sum())
 print("결측치:", df.isnull().sum().sum())

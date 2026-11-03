@@ -236,7 +236,7 @@ resid = final_fit.resid
 X_final = sm.add_constant(final_fit.model.exog, has_constant="skip")
 
 reset = linear_reset(final_fit, power=2, use_f=True)
-ks_stat, ks_p = stats.kstest(resid, "norm", args=(resid.mean(), resid.std()))
+ks_stat, ks_p = stats.kstest((resid - resid.mean()) / resid.std(), "norm")
 bp_stat, bp_p, bp_f, bp_fp = het_breuschpagan(resid, final_fit.model.exog)
 dw = durbin_watson(resid)
 

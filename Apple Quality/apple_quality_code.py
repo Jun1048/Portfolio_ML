@@ -33,7 +33,7 @@ RANDOM_STATE = 42
 # 1. 데이터 로딩 및 구조 점검
 # ======================================================================
 
-df = pd.read_csv("apple_quality.csv")
+df = pd.read_csv("apple_quality_raw.csv")
 
 num_cols = ["Size", "Weight", "Sweetness", "Crunchiness", "Juiciness", "Ripeness", "Acidity"]
 
